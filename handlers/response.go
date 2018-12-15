@@ -10,7 +10,7 @@ type ResponseItemList struct {
 	CurrentPage int         `json:"current_page"`
 	PagesCount  int         `json:"pages_count"`
 	PageSize    int         `json:"page_size"`
-	TotalCount  int         `json:"count"`
+	TotalCount  int         `json:"total_count"`
 	Items       interface{} `json:"items"`
 }
 

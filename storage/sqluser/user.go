@@ -54,7 +54,7 @@ func (r Repo) Update(user *model.User) error {
 }
 
 func (r Repo) Find() storage.UserFinder {
-	return &userFinder{
+	return &finder{
 		dbw: r.dbw,
 		builder: r.dbw.SelectBuilder(
 			"id",

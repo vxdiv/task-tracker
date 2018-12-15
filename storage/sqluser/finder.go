@@ -9,66 +9,66 @@ import (
 	"github.com/vxdiv/task-tracker/storage/sqldbw"
 )
 
-type userFinder struct {
+type finder struct {
 	dbw     *sqldbw.Wrapper
 	builder *builder.Builder
 }
 
-var _ storage.UserFinder = &userFinder{}
+var _ storage.UserFinder = &finder{}
 
-func (uf *userFinder) ByID(id int64) storage.UserFinder {
-	uf.builder.Where(builder.Eq{"id": id})
+func (f *finder) ByID(id int64) storage.UserFinder {
+	f.builder.Where(builder.Eq{"id": id})
 
-	return uf
+	return f
 }
 
-func (uf *userFinder) ByName(name string) storage.UserFinder {
-	uf.builder.Where(builder.Eq{"name": name})
+func (f *finder) ByName(name string) storage.UserFinder {
+	f.builder.Where(builder.Eq{"name": name})
 
-	return uf
+	return f
 }
 
-func (uf *userFinder) ByEmail(email string) storage.UserFinder {
-	uf.builder.Where(builder.Eq{"email": email})
+func (f *finder) ByEmail(email string) storage.UserFinder {
+	f.builder.Where(builder.Eq{"email": email})
 
-	return uf
+	return f
 }
 
-func (uf *userFinder) CreatedAt(filter storage.TimeFilter) storage.UserFinder {
+func (f *finder) CreatedAt(filter storage.TimeFilter) storage.UserFinder {
 	if filter != nil {
-		storage.FilterTime(uf.builder, filter, "created_at")
+		storage.FilterTime(f.builder, filter, "created_at")
 	}
 
-	return uf
+	return f
 }
 
-func (uf *userFinder) Status(status string) storage.UserFinder {
+func (f *finder) Status(status string) storage.UserFinder {
 	if len(status) > 0 {
-		uf.builder.Where(builder.Eq{"status": status})
+		f.builder.Where(builder.Eq{"status": status})
 	}
 
-	return uf
+	return f
 }
 
-type userScan struct {
-	user *model.User
+type itemScanner struct {
+	item *model.User
 }
 
-func (us *userScan) ScanItem(s sqldbw.Scanner) error {
+func (is *itemScanner) ScanItem(s sqldbw.Scanner) error {
 	return s.Scan(
-		&us.user.ID,
-		&us.user.Name,
-		&us.user.Email,
-		&us.user.Status,
-		&us.user.PasswordHash,
-		&us.user.CreatedAt,
-		&us.user.UpdatedAt,
+		&is.item.ID,
+		&is.item.Name,
+		&is.item.Email,
+		&is.item.Status,
+		&is.item.PasswordHash,
+		&is.item.CreatedAt,
+		&is.item.UpdatedAt,
 	)
 }
 
-func (uf *userFinder) One() (*model.User, error) {
+func (f *finder) One() (*model.User, error) {
 	user := &model.User{}
-	err := uf.dbw.LoadOne(uf.builder, &userScan{user})
+	err := f.dbw.LoadOne(f.builder, &itemScanner{user})
 	switch err {
 	case nil:
 	case sql.ErrNoRows:
@@ -80,25 +80,24 @@ func (uf *userFinder) One() (*model.User, error) {
 	return user, nil
 }
 
-type userListScan struct {
+type listScanner struct {
 	items []*model.User
 }
 
-func (ul *userListScan) ScanItem(s sqldbw.Scanner) error {
-	user := &model.User{}
-	item := &userScan{user}
+func (ls *listScanner) ScanItem(s sqldbw.Scanner) error {
+	item := &itemScanner{&model.User{}}
 	if err := item.ScanItem(s); err != nil {
 		return err
 	}
 
-	ul.items = append(ul.items, item.user)
+	ls.items = append(ls.items, item.item)
 
 	return nil
 }
 
-func (uf *userFinder) List(limit storage.LimitFilter) (list []*model.User, totalCount int, err error) {
-	users := &userListScan{}
-	totalCount, err = uf.dbw.LoadList(uf.builder, users, limit)
+func (f *finder) List(limit storage.LimitFilter) (list []*model.User, totalCount int, err error) {
+	listScanner := &listScanner{items: list}
+	totalCount, err = f.dbw.LoadList(f.builder, listScanner, limit)
 
-	return users.items, totalCount, err
+	return list, totalCount, err
 }

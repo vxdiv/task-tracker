@@ -130,9 +130,11 @@ func (uf *UserFilter) Parse(c echo.Context) (err error) {
 
 func ListUser(c echo.Context) error {
 	filter := UserFilter{}
-	filter.Parse(c)
+	if err := filter.Parse(c); err != nil {
+		return BadRequestError(err)
+	}
 
-	users, total, err := users.Find().CreatedAt(filter.timeFilter).All(filter.pager)
+	users, total, err := users.Find().CreatedAt(filter.timeFilter).List(filter.pager)
 	if err != nil {
 		return InternalServerError(err)
 	}

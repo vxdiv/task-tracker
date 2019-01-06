@@ -4,7 +4,7 @@ import "time"
 
 const (
 	TaskTypeImprovement = "improvement"
-	TaskTypeFuture      = "future"
+	TaskTypeFuture      = "feature"
 	TaskTypeBug         = "bug"
 
 	TaskStatusOpen       = "open"
@@ -19,7 +19,7 @@ const (
 	TaskResolutionDuplicate       = "duplicate"
 	TaskResolutionIncomplete      = "incomplete"
 	TaskResolutionCannotReproduce = "cannot_reproduce"
-	TaskResolutionDoNotNeedToDo   = "do_no_need_to_do"
+	TaskResolutionDoNotNeedToDo   = "do_not_need_to_do"
 
 	TaskPriorityTrivial  = "trivial"
 	TaskPriorityMajor    = "major"

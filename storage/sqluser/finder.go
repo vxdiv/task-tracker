@@ -95,9 +95,9 @@ func (ls *listScanner) ScanItem(s sqldbw.Scanner) error {
 	return nil
 }
 
-func (f *finder) List(limit storage.LimitFilter) (list []*model.User, totalCount int, err error) {
-	listScanner := &listScanner{items: list}
-	totalCount, err = f.dbw.LoadList(f.builder, listScanner, limit)
+func (f *finder) List(limit storage.LimitFilter) ([]*model.User, int, error) {
+	listScanner := &listScanner{}
+	totalCount, err := f.dbw.LoadList(f.builder, listScanner, limit)
 
-	return list, totalCount, err
+	return listScanner.items, totalCount, err
 }

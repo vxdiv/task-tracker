@@ -7,8 +7,8 @@ require (
 	github.com/go-sql-driver/mysql v1.4.0
 	github.com/go-xorm/builder v0.3.1
 	github.com/go-xorm/sqlfiddle v0.0.0-20180821085327-62ce714f951a // indirect
-	github.com/labstack/echo v3.3.5+incompatible
-	github.com/labstack/gommon v0.2.8 // indirect
+	github.com/labstack/echo v3.3.10+incompatible
+	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/sirupsen/logrus v1.2.0

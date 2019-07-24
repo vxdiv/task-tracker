@@ -9,24 +9,13 @@ import (
 
 var log = logrus.WithField("component", "db")
 
-func SetLogger(l *logrus.Entry) {
-	log = l
-}
-
 const dbDialect = MYSQL
 
-type Scanner interface {
+type RowScanner interface {
 	Scan(dst ...interface{}) error
 }
 
-type ItemScanner interface {
-	ScanItem(s Scanner) error
-}
-
-type LimitFilter interface {
-	Offset() int
-	Count() int
-}
+type ScanFunc func(RowScanner) error
 
 type Wrapper struct {
 	db    *sql.DB
@@ -54,7 +43,7 @@ func (rw *Wrapper) Insert(eq Eq) (int64, error) {
 }
 
 func (rw *Wrapper) Update(eq Eq, cond Cond) error {
-	sqlQuery, args, err := Update(eq).From(rw.table).Where(cond).ToSQL()
+	sqlQuery, args, err := Dialect(dbDialect).Update(eq).From(rw.table).Where(cond).ToSQL()
 	if err != nil {
 		return err
 	}
@@ -70,7 +59,7 @@ func (rw *Wrapper) SelectBuilder(cols ...string) *Builder {
 	return Dialect(dbDialect).Select(cols...).From(rw.table)
 }
 
-func (rw *Wrapper) LoadOne(b *Builder, s ItemScanner) error {
+func (rw *Wrapper) Row(b *Builder, scanner ScanFunc) error {
 	sqlQuery, args, err := b.ToSQL()
 	if err != nil {
 		return err
@@ -80,51 +69,47 @@ func (rw *Wrapper) LoadOne(b *Builder, s ItemScanner) error {
 
 	row := rw.db.QueryRow(sqlQuery, args...)
 
-	return s.ScanItem(row)
+	return scanner(row)
 }
 
-func (rw *Wrapper) LoadList(b *Builder, s ItemScanner, limitFilter LimitFilter) (totalRowCount int, err error) {
-	var (
-		countQuery string
-		sqlQuery   string
-		args       []interface{}
-	)
-
-	bCount := *b
-	countQuery, args, err = bCount.Select("count(*)").ToSQL()
+func (rw *Wrapper) Count(b *Builder) (int, error) {
+	countB := *b
+	countQuery, args, err := countB.Select("count(*)").ToSQL()
 	if err != nil {
 		return 0, err
 	}
 
 	log.Debugf("sql: %s; with args: %+v", countQuery, args)
 
-	err = rw.db.QueryRow(countQuery, args...).Scan(&totalRowCount)
+	var totalCount int
+	err = rw.db.QueryRow(countQuery, args...).Scan(&totalCount)
 	if err != nil {
 		return 0, err
 	}
 
-	if limitFilter != nil {
-		b.Limit(limitFilter.Count(), limitFilter.Offset())
-	}
+	return totalCount, nil
+}
 
-	sqlQuery, args, err = b.ToSQL()
+func (rw *Wrapper) Rows(b *Builder, scanner ScanFunc) error {
+
+	sqlQuery, args, err := b.ToSQL()
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	log.Debugf("sql: %s; with args: %+v", sqlQuery, args)
 
 	rows, err := rw.db.Query(sqlQuery, args...)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	defer rows.Close()
 	for rows.Next() {
-		if err := s.ScanItem(rows); err != nil {
-			return 0, err
+		if err := scanner(rows); err != nil {
+			return err
 		}
 	}
 
-	return totalRowCount, rows.Err()
+	return rows.Err()
 }

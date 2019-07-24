@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo"
 
 	"github.com/vxdiv/task-tracker/model"
-	"github.com/vxdiv/task-tracker/storage"
+	"github.com/vxdiv/task-tracker/storage/sqluser"
 )
 
 type RequestCreateUser struct {
@@ -34,7 +35,7 @@ func CreateUser(c echo.Context) error {
 	err := users.Create(user)
 	switch err {
 	case nil:
-	case storage.ErrUserAlreadyExists:
+	case sqluser.ErrUserAlreadyExists:
 		return BadRequestError(err)
 	default:
 		return InternalServerError(err)
@@ -55,26 +56,22 @@ func UpdateUser(c echo.Context) error {
 		return err
 	}
 
-	user, err := users.Find().ByID(req.ID).One()
+	user, err := users.Filter().ID(req.ID).One()
 	switch err {
 	case nil:
-	case storage.ErrUserNotFound:
+	case sqluser.ErrUserNotFound:
 		return NotFoundError(err)
 	default:
 		return InternalServerError(err)
 	}
 
 	user.Name = req.Name
-	user.Status = req.Status
+	user.Status = model.UserStatus(req.Status)
 	if err := users.Update(user); err != nil {
 		return InternalServerError(err)
 	}
 
 	return c.JSON(http.StatusOK, "ok")
-}
-
-type RequestGetUser struct {
-	ID int64 `json:"ID" query:"id" validate:"required"`
 }
 
 type ResponseUser struct {
@@ -87,28 +84,17 @@ type ResponseUser struct {
 }
 
 func GetUser(c echo.Context) error {
-	req := &RequestGetUser{}
-	if err := parseRequest(c, req); err != nil {
-		return err
-	}
-
-	user, err := users.Find().ByID(req.ID).One()
+	id, _ := strconv.Atoi(c.Param("id"))
+	user, err := users.One(users.Filter().ID(int64(id)))
 	switch err {
 	case nil:
-	case storage.ErrUserNotFound:
+	case sqluser.ErrUserNotFound:
 		return NotFoundError(err)
 	default:
 		return InternalServerError(err)
 	}
 
-	return c.JSON(http.StatusOK, &ResponseUser{
-		ID:      user.ID,
-		Name:    user.Name,
-		Email:   user.Email,
-		Status:  user.Status,
-		Created: user.CreatedAt.Unix(),
-		Updated: user.UpdatedAt.Unix(),
-	})
+	return c.JSON(http.StatusOK, convertUserFromModel(user))
 }
 
 type UserFilter struct {
@@ -134,22 +120,32 @@ func ListUser(c echo.Context) error {
 		return BadRequestError(err)
 	}
 
-	users, total, err := users.Find().CreatedAt(filter.timeFilter).List(filter.pager)
+	finder := users.Filter().CreatedAt(filter.timeFilter)
+	total, err := users.Count(finder)
 	if err != nil {
 		return InternalServerError(err)
 	}
 
-	items := make([]ResponseUser, 0)
+	users, err := users.List(finder.Limit(filter.pager))
+	if err != nil {
+		return InternalServerError(err)
+	}
+
+	items := make([]ResponseUser, 0, len(users))
 	for _, user := range users {
-		items = append(items, ResponseUser{
-			ID:      user.ID,
-			Name:    user.Name,
-			Email:   user.Email,
-			Status:  user.Status,
-			Created: user.CreatedAt.Unix(),
-			Updated: user.UpdatedAt.Unix(),
-		})
+		items = append(items, convertUserFromModel(user))
 	}
 
 	return c.JSON(http.StatusOK, ResponseItems(total, filter.pager, items))
+}
+
+func convertUserFromModel(user *model.User) ResponseUser {
+	return ResponseUser{
+		ID:      user.ID,
+		Name:    user.Name,
+		Email:   user.Email,
+		Status:  user.Status.String(),
+		Created: user.CreatedAt.Unix(),
+		Updated: user.UpdatedAt.Unix(),
+	}
 }

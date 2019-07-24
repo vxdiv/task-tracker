@@ -6,14 +6,14 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
-	"github.com/vxdiv/task-tracker/storage"
+
 	"github.com/vxdiv/task-tracker/storage/sqluser"
 )
 
 var (
 	log *logrus.Entry
 
-	users storage.UserRepo
+	users sqluser.Repo
 )
 
 func Init(db *sql.DB, e *echo.Echo, l *logrus.Entry) {

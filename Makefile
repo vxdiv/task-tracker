@@ -1,5 +1,2 @@
-setup:
-	go get -u github.com/pressly/goose/cmd/goose
-
-migrate:
-	@goose -dir ./migrations mysql "root:root@/project?parseTime=true" status
+build:
+	CGO_ENABLED=0 go build -o service -a main.go

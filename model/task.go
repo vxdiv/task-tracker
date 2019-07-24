@@ -3,28 +3,28 @@ package model
 import "time"
 
 const (
-	TaskTypeImprovement = "improvement"
-	TaskTypeFuture      = "feature"
-	TaskTypeBug         = "bug"
+	TaskTypeImprovement TaskType = "improvement"
+	TaskTypeFuture      TaskType = "feature"
+	TaskTypeBug         TaskType = "bug"
 
-	TaskStatusOpen       = "open"
-	TaskStatusInProgress = "in_progress"
-	TaskStatusResolve    = "resolver"
-	TaskStatusClose      = "close"
-	TaskStatusHold       = "hold"
-	TaskStatusReopen     = "reopen"
+	TaskStatusOpen       TaskStatus = "open"
+	TaskStatusInProgress TaskStatus = "in_progress"
+	TaskStatusResolve    TaskStatus = "resolver"
+	TaskStatusClose      TaskStatus = "close"
+	TaskStatusHold       TaskStatus = "hold"
+	TaskStatusReopen     TaskStatus = "reopen"
 
-	TaskResolutionDone            = "done"
-	TaskResolutionFixed           = "fixed"
-	TaskResolutionDuplicate       = "duplicate"
-	TaskResolutionIncomplete      = "incomplete"
-	TaskResolutionCannotReproduce = "cannot_reproduce"
-	TaskResolutionDoNotNeedToDo   = "do_not_need_to_do"
+	TaskResolutionDone            TaskResolution = "done"
+	TaskResolutionFixed           TaskResolution = "fixed"
+	TaskResolutionDuplicate       TaskResolution = "duplicate"
+	TaskResolutionIncomplete      TaskResolution = "incomplete"
+	TaskResolutionCannotReproduce TaskResolution = "cannot_reproduce"
+	TaskResolutionDoNotNeedToDo   TaskResolution = "do_not_need_to_do"
 
-	TaskPriorityTrivial  = "trivial"
-	TaskPriorityMajor    = "major"
-	TaskPriorityCritical = "critical"
-	TaskPriorityASAP     = "asap"
+	TaskPriorityTrivial  TaskPriority = "trivial"
+	TaskPriorityMajor    TaskPriority = "major"
+	TaskPriorityCritical TaskPriority = "critical"
+	TaskPriorityASAP     TaskPriority = "asap"
 )
 
 type TaskType string
@@ -85,6 +85,8 @@ func (t TaskPriority) IsASAP() bool {
 	return t == TaskPriorityASAP
 }
 
+type TaskStatus string
+
 type Task struct {
 	ID          int64
 	Name        string
@@ -92,7 +94,7 @@ type Task struct {
 	Type        TaskType
 	OwnerID     int64
 	AssignedID  int64
-	Status      string
+	Status      TaskStatus
 	DueDate     time.Time
 	Resolution  TaskResolution
 	Priority    TaskPriority

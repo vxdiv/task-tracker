@@ -8,15 +8,21 @@ import (
 )
 
 const (
-	UserStatusActive   = "active"
-	UserStatusDisabled = "disabled"
+	UserStatusActive   UserStatus = "active"
+	UserStatusDisabled UserStatus = "disabled"
 )
+
+type UserStatus string
+
+func (us UserStatus) String() string {
+	return string(us)
+}
 
 type User struct {
 	ID           int64
 	Name         string
 	Email        string
-	Status       string
+	Status       UserStatus
 	PasswordHash []byte
 	CreatedAt    time.Time
 	UpdatedAt    time.Time

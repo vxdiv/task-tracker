@@ -6,10 +6,9 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
 
-	"github.com/vxdiv/task-tracker/handlers"
+	"github.com/vxdiv/task-tracker/httpapi"
 )
 
 func main() {
@@ -20,9 +19,9 @@ func main() {
 		User:     "root",
 		Password: "root",
 	})
-	defer dbConn.Close()
-
-	e := echo.New()
+	defer func() {
+		_ = dbConn.Close()
+	}()
 
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	logrus.SetOutput(os.Stdout)
@@ -30,9 +29,10 @@ func main() {
 
 	log := logrus.WithField("app", "task-tracker")
 
-	handlers.Init(dbConn, e, log)
-
-	e.Logger.Fatal(e.Start(":1323"))
+	httpApiServer := httpapi.NewServer(dbConn, log)
+	if err := httpApiServer.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 type MysqlConfig struct {

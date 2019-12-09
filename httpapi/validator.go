@@ -1,4 +1,4 @@
-package handlers
+package httpapi
 
 import "github.com/go-playground/validator"
 

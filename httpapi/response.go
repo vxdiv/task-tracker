@@ -1,4 +1,4 @@
-package handlers
+package httpapi
 
 import (
 	"net/http"
@@ -14,7 +14,7 @@ type ResponseItemList struct {
 	Items       interface{} `json:"items"`
 }
 
-func ResponseItems(totalCount int, pager *Pager, items interface{}) ResponseItemList {
+func ResponseItems(totalCount int, pager *PagerRequestQuery, items interface{}) ResponseItemList {
 	return ResponseItemList{
 		CurrentPage: pager.Page,
 		TotalCount:  totalCount,
@@ -33,7 +33,8 @@ func NotFoundError(err error) error {
 }
 
 func InternalServerError(err error) error {
-	log.Errorf("Internal Server Error: %v", err)
+	// log.Errorf("Internal Server Error: %v", err)
+	// TODO in middleware
 
 	return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error")
 }

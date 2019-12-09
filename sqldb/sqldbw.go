@@ -1,8 +1,9 @@
-package sqldbw
+package sqldb
 
 import (
 	"database/sql"
 
+	"github.com/go-sql-driver/mysql"
 	. "github.com/go-xorm/builder"
 	"github.com/sirupsen/logrus"
 )
@@ -22,7 +23,7 @@ type Wrapper struct {
 	table string
 }
 
-func New(db *sql.DB, table string) *Wrapper {
+func NewDBWrapper(db *sql.DB, table string) *Wrapper {
 	return &Wrapper{db: db, table: table}
 }
 
@@ -112,4 +113,13 @@ func (rw *Wrapper) Rows(b *Builder, scanner ScanFunc) error {
 	}
 
 	return rows.Err()
+}
+
+func IsDuplicateEntryError(err error) bool {
+	mysqlError, ok := err.(*mysql.MySQLError)
+	if !ok {
+		return false
+	}
+
+	return mysqlError.Number == 1062
 }

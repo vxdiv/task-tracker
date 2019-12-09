@@ -1,4 +1,4 @@
-package handlers
+package httpapi
 
 import (
 	"strconv"
@@ -7,15 +7,26 @@ import (
 	"github.com/labstack/echo"
 )
 
+func parseRequest(c echo.Context, i interface{}) error {
+	if err := c.Bind(i); err != nil {
+		return err
+	}
+	if err := c.Validate(i); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 const defaultPageSize = 20
 
-type Pager struct {
+type PagerRequestQuery struct {
 	Page     int `query:"page"`
 	PageSize int `query:"page_size"`
 }
 
-func BindPager(c echo.Context) (*Pager, error) {
-	pager := &Pager{}
+func BindPager(c echo.Context) (*PagerRequestQuery, error) {
+	pager := &PagerRequestQuery{}
 	if err := c.Bind(pager); err != nil {
 		return nil, err
 	}
@@ -31,11 +42,11 @@ func BindPager(c echo.Context) (*Pager, error) {
 	return pager, nil
 }
 
-func (p Pager) Count() int {
+func (p PagerRequestQuery) Count() int {
 	return p.PageSize
 }
 
-func (p Pager) Offset() int {
+func (p PagerRequestQuery) Offset() int {
 	return (p.Page - 1) * p.PageSize
 }
 
